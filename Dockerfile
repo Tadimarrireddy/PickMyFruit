@@ -1,14 +1,12 @@
-# Use Eclipse Temurin base image for Java 17
-FROM eclipse-temurin:17-jdk-alpine
-
-# Set the working directory
+# Use a Maven image to build the project
+FROM maven:3.8.5-eclipse-temurin-17 AS build
 WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-# Copy jar file into container
-COPY target/PickMyFruit-0.0.1-SNAPSHOT.jar app.jar
-
-# Expose the default Spring Boot port
+# Use a lightweight JDK image to run the app
+FROM eclipse-temurin:17-jdk-alpine
+WORKDIR /app
+COPY --from=build /app/target/PickMyFruit-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
-
-# Command to run the jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
